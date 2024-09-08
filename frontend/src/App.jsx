@@ -55,7 +55,12 @@ const App = () => {
 
   return (
     <div className="chat-container">
-      <h1>LangGraph Human-in-the-loop Chat</h1>
+      <h2>LangGraph Human-in-the-loop Chat</h2>
+      {threadId && (
+        <div className="thread-id">
+          <p>Thread ID: {threadId}</p>
+        </div>
+      )}
       <div className="messages-container">
         {messages.map((message, index) => (
           <ChatMessage key={index} message={message} />
