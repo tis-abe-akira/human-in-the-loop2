@@ -15,6 +15,7 @@ load_dotenv(override=True)
 # ログの設定
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
+# FastAPIアプリケーションのインスタンスを作成
 app = FastAPI()
 
 # CORSミドルウェアの追加
@@ -32,38 +33,46 @@ agent = HumanInTheLoopAgent()
 # セッション管理のための簡易的なインメモリストア
 sessions: Dict[str, Any] = {}
 
+# メッセージのデータモデル
 class Message(BaseModel):
     content: str
     type: str
 
+# 会話の状態を表すデータモデル
 class ConversationState(BaseModel):
     messages: List[Message]
     is_waiting_for_approval: bool
 
+# 人間からのメッセージリクエストのデータモデル
 class HumanMessageRequest(BaseModel):
     message: str
 
+# 新しい会話を開始するエンドポイント
 @app.post("/start_conversation")
 async def start_conversation():
     logging.info(f"Method called: start_conversation")
-    thread_id = uuid4().hex
+    thread_id = uuid4().hex  # ユニークなスレッドIDを生成
     sessions[thread_id] = {
         "messages": [],
         "is_waiting_for_approval": False
     }
     return {"thread_id": thread_id}
 
+# メッセージを送信するエンドポイント
 @app.post("/send_message/{thread_id}")
 async def send_message(thread_id: str, request: HumanMessageRequest):
     logging.info(f"Method called: send_message with thread_id: {thread_id}")
     if thread_id not in sessions:
         raise HTTPException(status_code=404, detail="Conversation not found")
     
+    # エージェントにメッセージを処理させる
     agent.handle_human_message(request.message, thread_id)
     
+    # エージェントからメッセージを取得
     messages = agent.get_messages(thread_id)
     is_waiting_for_approval = agent.is_next_human_review_node(thread_id)
     
+    # セッションを更新
     sessions[thread_id] = {
         "messages": [Message(content=str(msg.content), type=msg.type) for msg in messages],
         "is_waiting_for_approval": is_waiting_for_approval
@@ -71,6 +80,7 @@ async def send_message(thread_id: str, request: HumanMessageRequest):
     
     return ConversationState(**sessions[thread_id])
 
+# メッセージを承認するエンドポイント
 @app.post("/approve/{thread_id}")
 async def approve(thread_id: str):
     logging.info(f"Method called: approve with thread_id: {thread_id}")
@@ -80,11 +90,14 @@ async def approve(thread_id: str):
     if not sessions[thread_id]["is_waiting_for_approval"]:
         raise HTTPException(status_code=400, detail="No approval pending")
     
+    # エージェントに承認を処理させる
     agent.handle_approve(thread_id)
     
+    # エージェントからメッセージを取得
     messages = agent.get_messages(thread_id)
     is_waiting_for_approval = agent.is_next_human_review_node(thread_id)
     
+    # セッションを更新
     sessions[thread_id] = {
         "messages": [Message(content=str(msg.content), type=msg.type) for msg in messages],
         "is_waiting_for_approval": is_waiting_for_approval
@@ -92,6 +105,7 @@ async def approve(thread_id: str):
     
     return ConversationState(**sessions[thread_id])
 
+# 会話の状態を取得するエンドポイント
 @app.get("/conversation_state/{thread_id}")
 async def get_conversation_state(thread_id: str):
     logging.info(f"Method called: get_conversation_state with thread_id: {thread_id}")
@@ -100,6 +114,7 @@ async def get_conversation_state(thread_id: str):
     
     return ConversationState(**sessions[thread_id])
 
+# アプリケーションを実行するためのエントリーポイント
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
