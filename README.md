@@ -2,6 +2,13 @@
 
 This project demonstrates a human-in-the-loop chat application using LangGraph, implemented with a FastAPI backend and a React frontend. It showcases how to integrate human approval into an AI-driven conversation flow.
 
+
+## When an agent proposes using a tool and the human approves it
+![hil_with_approve.gif](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/130262/bdcd2dfb-8c77-1784-dce7-b4972e2b7a39.gif)
+
+## When an agent does not use a tool (no approval needed)
+![hil_without_approve.gif](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/130262/64906c50-6f0a-e262-fde7-410ae12ff291.gif)
+
 ## Features
 
 - AI-driven conversation using LangGraph and OpenAI's GPT models

@@ -2,6 +2,12 @@
 
 このプロジェクトは、LangGraphを使用したヒューマンインザループチャットアプリケーションを示すものです。FastAPIバックエンドとReactフロントエンドで実装されており、AI駆動の会話フローに人間の承認をどのように統合するかを紹介しています。
 
+## エージェントがツール利用を提案し人間が承認する場合
+![hil_with_approve.gif](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/130262/bdcd2dfb-8c77-1784-dce7-b4972e2b7a39.gif)
+
+## エージェントがツールを利用しない場合（承認は不要）
+![hil_without_approve.gif](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/130262/64906c50-6f0a-e262-fde7-410ae12ff291.gif)
+
 ## 特徴
 
 - LangGraphとOpenAIのGPTモデルを使用したAI駆動の会話
