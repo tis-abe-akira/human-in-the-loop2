@@ -5,7 +5,11 @@ const API_BASE_URL = 'http://localhost:8000';
 
 const ChatMessage = ({ message }) => (
   <div className={`message ${message.type}`}>
-    <p>{message.content}</p>
+    {message.content ? (
+      <p>{message.content}</p>
+    ) : (
+      <p>ツールが承認を求めています</p>
+    )}
   </div>
 );
 
