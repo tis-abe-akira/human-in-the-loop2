@@ -18,6 +18,7 @@ const App = () => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isWaitingForApproval, setIsWaitingForApproval] = useState(false);
+  const [isSending, setIsSending] = useState(false); 
 
   useEffect(() => {
     const startConversation = async () => {
@@ -35,6 +36,7 @@ const App = () => {
   const sendMessage = async () => {
     if (!inputMessage.trim()) return;
 
+    setIsSending(true);
     try {
       const response = await axios.post(`${API_BASE_URL}/send_message/${threadId}`, {
         message: inputMessage
@@ -44,6 +46,8 @@ const App = () => {
       setInputMessage('');
     } catch (error) {
       console.error('Failed to send message:', error);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -77,7 +81,9 @@ const App = () => {
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Type your message..."
         />
-        <button onClick={sendMessage}>Send</button>
+        <button onClick={sendMessage} disabled={isSending}>
+          {isSending ? '送信中...' : '送信'}
+        </button>
       </div>
       {isWaitingForApproval && (
         <div className="approval-container">
