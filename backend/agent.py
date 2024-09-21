@@ -1,4 +1,5 @@
 from math import log
+from operator import is_
 from typing import Any, Literal
 
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
@@ -16,8 +17,11 @@ from datetime import datetime
 # https://langchain-ai.github.io/langgraph/how-tos/human_in_the_loop/review-tool-calls/
 
 # ログの設定
-def log_function_call(thread_id: str, function_name: str) -> None:
-    logging.info(f"Thread ID: {thread_id}, Function: {function_name}")
+def log_function_call(thread_id: str, function_name: str, message: str = None) -> None:
+    if message:
+        logging.info(f"Thread ID: {thread_id}, Function: {function_name}, Message: {message}")
+    else:
+        logging.info(f"Thread ID: {thread_id}, Function: {function_name}")
 @tool
 def weather_search(city: str) -> str:
     """Search for the weather"""
@@ -87,11 +91,12 @@ class HumanInTheLoopAgent:
             return "call_llm"
 
     def handle_human_message(self, human_message: str, thread_id: str) -> None:
-        log_function_call(thread_id, "handle_human_message")
         # 承認待ちの状態でhuman_messageが送信されるのは、ツールの呼び出しを修正したい状況
         # そのため、次がhuman_review_nodeの場合、ツールの呼び出しが失敗したことをStateに追加
         # 参考: https://langchain-ai.github.io/langgraph/how-tos/human_in_the_loop/review-tool-calls/#give-feedback-to-a-tool-call
-        if self.is_next_human_review_node(thread_id):
+        is_next_human_review_node = self.is_next_human_review_node(thread_id)
+        log_function_call(thread_id, "handle_human_message", str(is_next_human_review_node))
+        if is_next_human_review_node:
             self._handle_tool_call_rejection(thread_id)
     
         for _ in self.graph.stream(
@@ -135,9 +140,10 @@ class HumanInTheLoopAgent:
         特定のスレッドが次に「人間によるレビュー」ノードに進むかどうかを判定するためのメソッドです。
         この関数は、thread_id という文字列を引数に取り、ブール値を返します。
         """
-        log_function_call(thread_id, "is_next_human_review_node")
         graph_next = self._get_state(thread_id).next
-        return len(graph_next) != 0 and graph_next[0] == "human_review_node"
+        result = len(graph_next) != 0 and graph_next[0] == "human_review_node"
+        log_function_call(thread_id, "is_next_human_review_node", message=str(result))
+        return result
 
     def _get_state(self, thread_id: str) -> StateSnapshot:
         # log_function_call(thread_id, "_get_state")
